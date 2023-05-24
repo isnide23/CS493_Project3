@@ -1,4 +1,6 @@
 const { Router } = require('express')
+const bcrypt = require('bcryptjs');
+
 const passwordHash = await bcrypt.hash(User.password, 8);
 
 const { Business } = require('../models/business')
@@ -13,8 +15,8 @@ const router = Router()
  */
 router.post('/', async function (req, res, next) {
   try {
-    const user = await User.create(req.body, BusinessClientFields)
-    res.status(201).send({ id: business.id })
+    const user = await User.create(req.body, UserClientFields)
+    res.status(201).send({ id: user.id })
   } catch (e) {
     if (e instanceof ValidationError) {
       res.status(400).send({ error: e.message })

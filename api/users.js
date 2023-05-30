@@ -1,7 +1,4 @@
 const { Router } = require('express')
-const bcrypt = require('bcryptjs');
-
-const passwordHash = await bcrypt.hash(User.password, 8);
 
 const { Business } = require('../models/business')
 const { Photo } = require('../models/photo')
@@ -14,15 +11,22 @@ const router = Router()
  * Route to create a new user.
  */
 router.post('/', async function (req, res, next) {
-  try {
-    const user = await User.create(req.body, UserClientFields)
-    res.status(201).send({ id: user.id })
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      res.status(400).send({ error: e.message })
-    } else {
-      throw e
+  if (validateAgainstSchema(req.body, UserSchema)) {
+    try {
+      const id = await insertNewUser(req.body);
+      res.status(201).send({
+        _id: id
+      });
+    } catch (err) {
+      console.error("  -- Error:", err);
+      res.status(500).send({
+        error: "Error inserting new user.  Try again later."
+      });
     }
+  } else {
+    res.status(400).send({
+      error: "Request body does not contain a valid User."
+    });
   }
 })
 

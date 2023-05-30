@@ -1,5 +1,8 @@
 const { DataTypes } = require('sequelize')
 
+const bcrypt = require('bcryptjs');
+const passwordHash = await bcrypt.hash(User.password, 8);
+
 const sequelize = require('../lib/sequelize')
 const { Business} = require('./business')
 const { Photo } = require('./photo')
@@ -45,3 +48,17 @@ exports.UserClientFields = [
     'admin'
 ]
 
+/*
+ * Insert a new User into the DB.
+ */
+exports.insertNewUser = async function (user) {
+  const userToInsert = extractValidFields(user, UserSchema);
+  const db = getDBReference();
+  const collection = db.collection('users');
+
+  const passwordHash = await bcrypt.hash(userToInsert.password, 8);
+  userToInsert.password = passwordHash;
+
+  const result = await collection.insertOne(userToInsert);
+  return result.insertedId;
+};

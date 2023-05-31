@@ -36,11 +36,12 @@ router.post('/', async function (req, res, next) {
  * Route to login.
  */
 router.post('/login', async function (req, res, next) {
-  if (req.body && req.body.id && req.body.password) {
+  if (req.body && req.body.email && req.body.password) {
     try {
-      const authenticated = await validateUser(req.body.id, req.body.password);
+      const authenticated = await validateUser(req.body.email, req.body.password);
       if (authenticated) {
-        const token = generateAuthToken(req.body.id);
+        const user = getUserByEmail(req.body.email)
+        const token = generateAuthToken(user.id);
         res.status(200).send({
           token: token
         });

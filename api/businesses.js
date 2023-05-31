@@ -4,6 +4,7 @@ const { ValidationError } = require('sequelize')
 const { Business, BusinessClientFields } = require('../models/business')
 const { Photo } = require('../models/photo')
 const { Review } = require('../models/review')
+const { requireAuthentication } = require('../lib/auth')
 
 const router = Router()
 
@@ -55,7 +56,7 @@ router.get('/', async function (req, res) {
 /*
  * Route to create a new business.
  */
-router.post('/', async function (req, res, next) {
+router.post('/', requireAuthentication, async function (req, res, next) {
   try {
     const business = await Business.create(req.body, BusinessClientFields)
     res.status(201).send({ id: business.id })

@@ -17,8 +17,9 @@ const User = sequelize.define('user', {
       // Storing passwords in plaintext in the database is terrible.
       // Hashing the value with an appropriate cryptographic hash function is better.
       // Using the username as a salt is better.
-      this.setDataValue('password', hash(this.name + value));
-    },
+      this.setDataValue('password', bcrypt.hash(userToInsert.password, 8));
+    }
+  },
   admin: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }
 })
 
@@ -60,8 +61,8 @@ exports.UserClientFields = [
 exports.insertNewUser = async function (user) {
   const userToInsert = extractValidFields(user, UserSchema);
 
-  const passwordHash = await bcrypt.hash(userToInsert.password, 8);
-  userToInsert.password = passwordHash;
+  // const passwordHash = await bcrypt.hash(userToInsert.password, 8);
+  // userToInsert.password = passwordHash;
 
   const validatedUser = await User.create(userToInsert, UserClientFields)
 
@@ -72,26 +73,37 @@ exports.insertNewUser = async function (user) {
  * Fetch a user from the DB based on user ID.
  */
 async function getUserById(id, includePassword) {
-  const db = getDBReference();
-  const collection = db.collection('users');
-  if (!ObjectId.isValid(id)) {
-    return null;
-  } else {
-    const projection = includePassword ? {} : { password: 0 };
-    const results = await collection
-      .find({ _id: new ObjectId(id) })
-      .project(projection)
-      .toArray();
-    return results[0];
+  const user = await User.findOne({
+    where: {
+      id: id
+    }
+  });
+  if (user === null) {
+    return 'user not found';
   }
+  return user;
 };
-exports.getUserById = getUserById;
 
 /*
- * Fetch a user from the DB based on user ID.
+ * Fetch a user from the DB based on user email.
  */
-exports.validateUser = async function (id, password) {
-  const user = await getUserById(id, true);
+async function getUserByEmail(email, includePassword) {
+  const user = await User.findOne({
+    where: {
+      email: email
+    }
+  });
+  if (user === null) {
+    return 'user not found';
+  }
+  return user;
+};
+
+/*
+ * Validate a user from the DB based on user ID.
+ */
+exports.validateUser = async function (email, password) {
+  const user = await getUserByEmail(email, true);
   const authenticated = user && await bcrypt.compare(password, user.password);
   return authenticated;
 };

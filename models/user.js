@@ -11,7 +11,14 @@ const User = sequelize.define('user', {
   id : { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: true },
-  password: { type: DataTypes.STRING, allowNull: false },
+  password: {
+    type: DataTypes.STRING,
+    set(value) {
+      // Storing passwords in plaintext in the database is terrible.
+      // Hashing the value with an appropriate cryptographic hash function is better.
+      // Using the username as a salt is better.
+      this.setDataValue('password', hash(this.name + value));
+    },
   admin: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }
 })
 
